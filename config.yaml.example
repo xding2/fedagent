@@ -1,0 +1,17 @@
+# FedAgent Config
+# API Key is loaded from environment variable — NEVER put your real key here!
+#
+# Setup:
+#   Option 1: Create a .env file (auto-loaded by start scripts, excluded by .gitignore)
+#     echo "OPENAI_API_KEY=sk-your-key-here" > .env
+#
+#   Option 2: Set environment variable directly
+#     export OPENAI_API_KEY=sk-your-key-here   # Linux/macOS
+#     $env:OPENAI_API_KEY="sk-your-key-here"   # PowerShell
+#     set OPENAI_API_KEY=sk-your-key-here       # Windows CMD
+
+provider: openai
+api_key: ${OPENAI_API_KEY}
+
+large_model: gpt-4o
+small_model: gpt-4o-mini

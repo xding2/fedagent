@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  fedagent:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./agents:/app/agents
+      - ./CONSTITUTION.md:/app/CONSTITUTION.md
+      - ./data:/app/data
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    restart: unless-stopped
