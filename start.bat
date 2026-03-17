@@ -5,80 +5,74 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
 echo.
-echo   ███████╗███████╗██████╗  █████╗  ██████╗ ███████╗███╗   ██╗████████╗
-echo   ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝
-echo   █████╗  █████╗  ██║  ██║███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║
-echo   ██╔══╝  ██╔══╝  ██║  ██║██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║
-echo   ██║     ███████╗██████╔╝██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║
-echo   ╚═╝     ╚══════╝╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝
-echo.
-echo   三权分立多 Agent 协作系统
 echo   ============================================
+echo        F E D A G E N T
+echo   ============================================
+echo   Separation of Powers Multi-Agent System
 echo.
 
-:: ---------- 检查 Python ----------
+:: ---------- Check Python ----------
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] 未找到 Python，请先安装 Python 3.10+
+    echo [ERROR] Python not found. Please install Python 3.10+
     pause
     exit /b 1
 )
 for /f "tokens=*" %%i in ('python --version 2^>^&1') do echo [OK] %%i
 
-:: ---------- 检查 Node.js ----------
+:: ---------- Check Node.js ----------
 node --version >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] 未找到 Node.js，请先安装 Node.js 18+
+    echo [ERROR] Node.js not found. Please install Node.js 18+
     pause
     exit /b 1
 )
 for /f "tokens=*" %%i in ('node --version 2^>^&1') do echo [OK] Node.js %%i
 
-:: ---------- 安装 Python 依赖 ----------
+:: ---------- Install Python deps ----------
 echo.
-echo [1/4] 安装 Python 依赖...
+echo [1/4] Installing Python dependencies...
 set PYTHONUTF8=1
 pip install -q fastapi uvicorn sqlalchemy aiosqlite pyyaml httpx openai 2>nul
-echo   -^> 完成
+echo   -^> Done
 
-:: ---------- 安装前端依赖 ----------
-echo [2/4] 安装前端依赖...
+:: ---------- Install frontend deps ----------
+echo [2/4] Installing frontend dependencies...
 if not exist "frontend\node_modules" (
     cd frontend
     call npm install --silent 2>nul
     cd ..
-    echo   -^> 完成
+    echo   -^> Done
 ) else (
-    echo   -^> 已存在，跳过
+    echo   -^> Already installed, skip
 )
 
-:: ---------- 构建前端 ----------
-echo [3/4] 构建前端...
+:: ---------- Build frontend ----------
+echo [3/4] Building frontend...
 if not exist "frontend\dist\index.html" (
     cd frontend
     call npx vite build --logLevel error 2>nul
     cd ..
-    echo   -^> 完成
+    echo   -^> Done
 ) else (
-    echo   -^> 已是最新，跳过
+    echo   -^> Already built, skip
 )
 
-:: ---------- 检查配置 ----------
-echo [4/4] 检查配置...
+:: ---------- Check config ----------
+echo [4/4] Checking config...
 if not exist "config.yaml" (
     echo.
-    echo   首次运行，需要配置 API 信息。
-    echo   请选择你的 LLM 提供商:
+    echo   First run - configure your LLM provider:
     echo.
-    echo     1^) OpenAI (官方)
+    echo     1^) OpenAI
     echo     2^) DeepSeek
-    echo     3^) SiliconFlow (硅基流动)
+    echo     3^) SiliconFlow
     echo     4^) OpenRouter
     echo     5^) Anthropic (Claude)
-    echo     6^) Ollama (本地模型)
-    echo     7^) 其他 OpenAI 兼容 API
+    echo     6^) Ollama (local)
+    echo     7^) Other OpenAI-compatible API
     echo.
-    set /p "CHOICE=  请输入编号 [1-7]: "
+    set /p "CHOICE=  Enter number [1-7]: "
 
     if "!CHOICE!"=="1" (
         set "PROVIDER=openai"
@@ -118,7 +112,7 @@ if not exist "config.yaml" (
         set "ENV_NAME="
     ) else if "!CHOICE!"=="7" (
         set "PROVIDER=openai"
-        set /p "BASE_URL=  请输入 API Base URL: "
+        set /p "BASE_URL=  Enter API Base URL: "
         set "DEFAULT_BIG="
         set "DEFAULT_SMALL="
         set "ENV_NAME=FEDAGENT_API_KEY"
@@ -130,26 +124,25 @@ if not exist "config.yaml" (
         set "ENV_NAME=OPENAI_API_KEY"
     )
 
-    :: 获取 API Key
+    :: Get API Key
     set "API_KEY="
     if not "!PROVIDER!"=="ollama" (
         echo.
-        set /p "API_KEY=  请输入 API Key: "
+        set /p "API_KEY=  Enter API Key: "
     )
 
-    :: 模型名称
+    :: Model names
     echo.
-    set /p "BIG_MODEL=  大模型名称 [!DEFAULT_BIG!]: "
+    set /p "BIG_MODEL=  Large model [!DEFAULT_BIG!]: "
     if "!BIG_MODEL!"=="" set "BIG_MODEL=!DEFAULT_BIG!"
-    set /p "SMALL_MODEL=  小模型名称 [!DEFAULT_SMALL!]: "
+    set /p "SMALL_MODEL=  Small model [!DEFAULT_SMALL!]: "
     if "!SMALL_MODEL!"=="" set "SMALL_MODEL=!DEFAULT_SMALL!"
 
-    :: 写入配置文件 — 只写环境变量引用，不写明文 key
+    :: Write config file (no plaintext key)
     if "!ENV_NAME!"=="" set "ENV_NAME=FEDAGENT_API_KEY"
     (
-        echo # FedAgent 配置文件
-        echo # API Key 通过环境变量提供，不存储在此文件中
-        echo # 设置方式: set !ENV_NAME!=your-key-here
+        echo # FedAgent Config
+        echo # API Key loaded from .env file via environment variable
         echo.
         echo provider: !PROVIDER!
     ) > config.yaml
@@ -158,7 +151,6 @@ if not exist "config.yaml" (
         echo base_url: !BASE_URL!>> config.yaml
     )
 
-    :: 写入环境变量引用而非明文
     echo api_key: ${!ENV_NAME!}>> config.yaml
 
     (
@@ -168,16 +160,16 @@ if not exist "config.yaml" (
     ) >> config.yaml
 
     echo.
-    echo   -^> 配置已保存到 config.yaml (不含 API Key)
+    echo   -^> Config saved to config.yaml (no API key in file)
 
-    :: 保存到 .env 文件 (gitignore 已排除)
+    :: Save key to .env (excluded by .gitignore)
     if not "!API_KEY!"=="" (
         echo !ENV_NAME!=!API_KEY!> .env
-        echo   -^> API Key 已保存到 .env (已被 .gitignore 排除)
+        echo   -^> API Key saved to .env (excluded by .gitignore)
     )
 )
 
-:: ---------- 加载 .env ----------
+:: ---------- Load .env ----------
 if exist ".env" (
     for /f "usebackq tokens=1,* delims==" %%a in (".env") do (
         set "%%a=%%b"
@@ -186,13 +178,13 @@ if exist ".env" (
 
 echo.
 echo ============================================
-echo   启动 FedAgent 服务...
-echo   访问地址: http://localhost:8000
-echo   按 Ctrl+C 停止
+echo   Starting FedAgent server...
+echo   URL: http://localhost:8000
+echo   Press Ctrl+C to stop
 echo ============================================
 echo.
 
-:: ---------- 启动服务 ----------
+:: ---------- Start server ----------
 set PYTHONUTF8=1
 python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 pause
