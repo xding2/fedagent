@@ -1,13 +1,15 @@
 /**
- * Agent 角色渲染器 — 16x16 像素角色，带动画和对话泡泡
+ * Agent Renderer — 16x16 pixel characters with animation and speech bubbles
  */
 import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import { TILE_SIZE } from './constants'
 import { BUILDINGS } from './WorldConfig'
 import { SpriteFactory } from './SpriteFactory'
+import { useUIStore } from '../stores/uiStore'
 
 interface AgentVisual {
   container: Container
+  nameLabel: Text
   bubble: Container | null
   bubbleText: Text | null
   buildingId: string
@@ -71,12 +73,13 @@ export class AgentRenderer {
     c.x = x
     c.y = y
 
-    // 角色精灵 (Graphics)
     const sprite = factory.createAgent(agentId)
     c.addChild(sprite)
 
-    // 名字标签 (带黑色描边，确保在任何背景上可读)
-    const name = AGENT_SHORT_NAMES[agentId] || agentId
+    // Name label with black outline for readability
+    const locale = useUIStore.getState().locale
+    const names = locale === 'en' ? AGENT_SHORT_NAMES_EN : AGENT_SHORT_NAMES_ZH
+    const name = names[agentId] || agentId
     const nameLabel = new Text({
       text: name,
       style: new TextStyle({
@@ -93,6 +96,7 @@ export class AgentRenderer {
     this.container.addChild(c)
     this.agents.set(agentId, {
       container: c,
+      nameLabel,
       bubble: null,
       bubbleText: null,
       buildingId,
@@ -103,7 +107,7 @@ export class AgentRenderer {
     })
   }
 
-  /** 设置 Agent 动画状态 */
+  /** Set agent animation state */
   setAgentAnimation(agentId: string, state: string) {
     const agent = this.agents.get(agentId)
     if (!agent) return
@@ -111,12 +115,13 @@ export class AgentRenderer {
     agent.state = state
     agent.animTimer = Date.now()
 
+    const locale = useUIStore.getState().locale
     switch (state) {
       case 'thinking':
-        this.showBubble(agentId, '思考中...')
+        this.showBubble(agentId, locale === 'en' ? 'Thinking...' : '思考中...')
         break
       case 'working':
-        this.showBubble(agentId, '工作中...')
+        this.showBubble(agentId, locale === 'en' ? 'Working...' : '工作中...')
         break
       case 'celebrating':
       case 'rejecting':
@@ -242,12 +247,33 @@ export class AgentRenderer {
     })
   }
 
+  /** Update all text labels when locale changes */
+  updateLocale() {
+    const locale = useUIStore.getState().locale
+    const names = locale === 'en' ? AGENT_SHORT_NAMES_EN : AGENT_SHORT_NAMES_ZH
+
+    this.agents.forEach((agent, agentId) => {
+      const name = names[agentId] || agentId
+      agent.nameLabel.text = name
+      agent.nameLabel.x = TILE_SIZE / 2 - agent.nameLabel.width / 2
+
+      // Update bubble text if active
+      if (agent.bubble && agent.bubbleText) {
+        if (agent.state === 'thinking') {
+          agent.bubbleText.text = locale === 'en' ? 'Thinking...' : '思考中...'
+        } else if (agent.state === 'working') {
+          agent.bubbleText.text = locale === 'en' ? 'Working...' : '工作中...'
+        }
+      }
+    })
+  }
+
   destroy() {
     this.container.destroy({ children: true })
   }
 }
 
-const AGENT_SHORT_NAMES: Record<string, string> = {
+const AGENT_SHORT_NAMES_ZH: Record<string, string> = {
   president: '总统',
   chief_of_staff: '幕僚长',
   sec_strategy: '战略',
@@ -264,4 +290,23 @@ const AGENT_SHORT_NAMES: Record<string, string> = {
   justice_progressive: '进步派',
   justice_originalist: '保守派',
   press_secretary: '新闻官',
+}
+
+const AGENT_SHORT_NAMES_EN: Record<string, string> = {
+  president: 'President',
+  chief_of_staff: 'CoS',
+  sec_strategy: 'Strategy',
+  sec_research: 'Research',
+  sec_operations: 'Operations',
+  sec_quality: 'Quality',
+  attorney_general: 'AG',
+  speaker_house: 'Speaker',
+  senate_leader: 'Sen. Leader',
+  house_committee: 'House Com.',
+  senate_committee: 'Sen. Com.',
+  cbo: 'CBO',
+  chief_justice: 'Chief Justice',
+  justice_progressive: 'Progressive',
+  justice_originalist: 'Originalist',
+  press_secretary: 'Press Sec.',
 }

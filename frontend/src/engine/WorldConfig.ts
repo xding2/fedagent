@@ -1,7 +1,8 @@
 /**
- * 像素世界地图配置 — 建筑、房间、路径、自然物
+ * Pixel World Map Config — buildings, rooms, paths, nature
  */
 import { WORLD_COLS, WORLD_ROWS } from './constants'
+import { useUIStore } from '../stores/uiStore'
 
 // ── 瓦片类型 ──
 export enum TileType {
@@ -212,7 +213,47 @@ export const BUILDINGS: BuildingDef[] = [
 ]
 
 // ═══════════════════════════════════════
-// 路径定义 (tile坐标数组，将被标记为 PATH)
+// Bilingual label helpers
+// ═══════════════════════════════════════
+
+const BUILDING_LABELS: Record<string, { zh: string; en: string }> = {
+  white_house:   { zh: '白宫 White House',       en: 'White House' },
+  capitol:       { zh: '国会大厦 Capitol',        en: 'Capitol' },
+  supreme_court: { zh: '最高法院 Supreme Court',  en: 'Supreme Court' },
+  press_podium:  { zh: '新闻发布厅 Press Room',   en: 'Press Room' },
+}
+
+const ROOM_NAMES: Record<string, { zh: string; en: string }> = {
+  '椭圆办公室':   { zh: '椭圆办公室',   en: 'Oval Office' },
+  '战略室':       { zh: '战略室',       en: 'Strategy Room' },
+  '幕僚办公区':   { zh: '幕僚办公区',   en: 'Staff Office' },
+  '质量与执行室': { zh: '质量与执行室', en: 'Quality & Ops' },
+  '检察长办公室': { zh: '检察长办公室', en: 'AG Office' },
+  '众议院':       { zh: '众议院',       en: 'House Chamber' },
+  '参议院':       { zh: '参议院',       en: 'Senate Chamber' },
+  '众院委员会室': { zh: '众院委员会室', en: 'House Committee' },
+  '参院委员会室': { zh: '参院委员会室', en: 'Senate Committee' },
+  '预算办公室':   { zh: '预算办公室',   en: 'Budget Office' },
+  '法庭':         { zh: '法庭',         en: 'Courtroom' },
+  '法官室':       { zh: '法官室',       en: 'Chambers' },
+  '档案室':       { zh: '档案室',       en: 'Archives' },
+  '发布厅':       { zh: '发布厅',       en: 'Briefing Room' },
+}
+
+/** Get building label for current locale */
+export function getBuildingLabel(buildingId: string): string {
+  const locale = useUIStore.getState().locale
+  return BUILDING_LABELS[buildingId]?.[locale] ?? buildingId
+}
+
+/** Get room name for current locale */
+export function getRoomName(zhName: string): string {
+  const locale = useUIStore.getState().locale
+  return ROOM_NAMES[zhName]?.[locale] ?? zhName
+}
+
+// ═══════════════════════════════════════
+// Path definitions
 // ═══════════════════════════════════════
 
 export function generatePaths(): [number, number][] {

@@ -1,9 +1,11 @@
 /**
- * PixiJS 画布 — 像素小镇世界 + 缩放/平移控件
+ * PixiJS Canvas — Pixel world + zoom/pan controls
  */
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { DCPixiApp } from '../engine/PixiApp'
 import { useAgentStore } from '../stores/agentStore'
+import { useUIStore } from '../stores/uiStore'
+import { useT } from '../i18n'
 
 export default function PixiCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -12,6 +14,8 @@ export default function PixiCanvas() {
   const prevStatesRef = useRef<Record<string, string>>({})
   const [zoom, setZoom] = useState(1)
 
+  const t = useT()
+  const locale = useUIStore(s => s.locale)
   const agents = useAgentStore(s => s.agents)
   const activeBuildings = useAgentStore(s => s.activeBuildings)
 
@@ -148,6 +152,13 @@ export default function PixiCanvas() {
     })
   }, [activeBuildings])
 
+  // Update pixel world text when locale changes
+  useEffect(() => {
+    const pixi = pixiRef.current
+    if (!pixi) return
+    pixi.updateLocale()
+  }, [locale])
+
   const handleZoomIn = useCallback(() => {
     const pixi = pixiRef.current
     if (!pixi) return
@@ -179,30 +190,30 @@ export default function PixiCanvas() {
         style={{ imageRendering: 'pixelated' }}
       />
 
-      {/* 图例 */}
+      {/* Legend */}
       <div className="absolute top-2 left-2 glass rounded-lg px-2 py-1.5 text-[10px] space-y-0.5 opacity-80">
         <div className="text-gray-400 font-semibold text-[9px] uppercase tracking-wider mb-0.5">FedAgent</div>
-        <LegendItem color="bg-blue-500" label="行政" />
-        <LegendItem color="bg-amber-500" label="立法" />
-        <LegendItem color="bg-red-500" label="司法" />
+        <LegendItem color="bg-blue-500" label={t('pixel.executive')} />
+        <LegendItem color="bg-amber-500" label={t('pixel.legislative')} />
+        <LegendItem color="bg-red-500" label={t('pixel.judicial')} />
       </div>
 
-      {/* 缩放控件 */}
+      {/* Zoom controls */}
       <div className="absolute top-2 right-2 flex flex-col gap-1">
         <button
           onClick={handleZoomIn}
           className="w-7 h-7 glass rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors text-sm"
-          title="放大"
+          title={t('pixel.zoom_in')}
         >+</button>
         <button
           onClick={handleReset}
           className="w-7 h-7 glass rounded-lg flex items-center justify-center text-gray-500 hover:text-white transition-colors text-[10px] font-mono"
-          title="重置视角"
+          title={t('pixel.reset_view')}
         >{Math.round(zoom * 100)}%</button>
         <button
           onClick={handleZoomOut}
           className="w-7 h-7 glass rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors text-sm"
-          title="缩小"
+          title={t('pixel.zoom_out')}
         >−</button>
       </div>
     </div>

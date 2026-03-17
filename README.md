@@ -31,6 +31,71 @@
 
 > Every question you ask goes through a complete legislative process — drafting, deliberation, voting, signing (and even constitutional review).
 
+### How It Works
+
+```mermaid
+flowchart TB
+    User([" 👤 User asks a question "]):::user
+
+    subgraph Executive["🏛️ EXECUTIVE BRANCH — White House"]
+        direction TB
+        CoS["🧑‍💼 Chief of Staff\n(Triage & Route)"]
+        President["👔 President\n(Review & Sign)"]
+        Cabinet["📋 4 Secretaries\n(Draft & Execute)"]
+        CoS --> Cabinet --> President
+    end
+
+    subgraph Legislative["🏛️ LEGISLATIVE BRANCH — Capitol"]
+        direction TB
+        House["🏠 House Committee\n(Review & Amend)"]
+        HouseVote["🗳️ House Vote"]
+        Senate["🏛️ Senate Committee\n(Review & Amend)"]
+        SenateVote["🗳️ Senate Vote"]
+        House --> HouseVote --> Senate --> SenateVote
+    end
+
+    subgraph Judicial["⚖️ JUDICIAL BRANCH — Supreme Court"]
+        direction TB
+        CJ["👨‍⚖️ Chief Justice"]
+        PJ["⚖️ Progressive\nJustice"]
+        OJ["⚖️ Originalist\nJustice"]
+        CJ --- PJ
+        CJ --- OJ
+    end
+
+    Result([" ✅ Final Response "]):::result
+
+    User -->|"L1: Direct"| CoS
+    User -->|"L2: Executive"| CoS
+    User -->|"L3: Legislative"| CoS
+    User -->|"L4: Full Review"| CoS
+
+    CoS -->|"L1"| Result
+    President -->|"L2"| Result
+    President -->|"L3/L4"| Legislative
+    SenateVote -->|"Passed"| President
+    President -->|"Signed (L3)"| Result
+    President -->|"Signed (L4)"| Judicial
+    Judicial -->|"Constitutional ✓"| Result
+    Judicial -->|"Unconstitutional ✗"| User
+
+    classDef user fill:#3b82f6,stroke:#1d4ed8,color:#fff,rx:20
+    classDef result fill:#10b981,stroke:#059669,color:#fff,rx:20
+
+    style Executive fill:#fef3c7,stroke:#f59e0b,color:#000
+    style Legislative fill:#dbeafe,stroke:#3b82f6,color:#000
+    style Judicial fill:#fce7f3,stroke:#ec4899,color:#000
+```
+
+#### Task Level Quick Reference
+
+```
+ ⚡ L1  User ──→ Chief of Staff ──────────────────────────────→ Response     (~5s)
+ 🔵 L2  User ──→ Chief of Staff ──→ Cabinet ──→ President ───→ Response    (~15s)
+ 🟣 L3  User ──→ CoS ──→ Cabinet ──→ House ──→ Senate ──→ President ──→ Response  (~45s)
+ 🔴 L4  User ──→ CoS ──→ Cabinet ──→ House ──→ Senate ──→ President ──→ Supreme Court ──→ Response  (~60s)
+```
+
 ---
 
 ## ✨ Features

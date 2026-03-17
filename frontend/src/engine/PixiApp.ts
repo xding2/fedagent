@@ -64,9 +64,9 @@ export class DCPixiApp {
       this.app.ticker.add(() => this.tick())
       this.initialized = true
 
-      console.log('[PixiApp] 像素世界初始化完成')
+      console.log('[PixiApp] Pixel world initialized')
     } catch (e) {
-      console.error('[PixiApp] 初始化失败:', e)
+      console.error('[PixiApp] Initialization failed:', e)
     }
   }
 
@@ -116,6 +116,13 @@ export class DCPixiApp {
     this.panX = 0
     this.panY = 0
     this.applyTransform()
+  }
+
+  /** Update all text labels when locale changes */
+  updateLocale() {
+    if (!this.initialized) return
+    this.buildingRenderer.updateLocale()
+    this.agentRenderer.updateLocale()
   }
 
   setBuildingGlow(buildingId: string, active: boolean) {

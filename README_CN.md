@@ -30,6 +30,71 @@
 
 > 你的每一个问题都会像一项法案一样，经过提案、审议、投票、签署（甚至违宪审查）的完整流程。
 
+### 系统工作流程
+
+```mermaid
+flowchart TB
+    User([" 👤 用户提问 "]):::user
+
+    subgraph Executive["🏛️ 行政分支 — 白宫"]
+        direction TB
+        CoS["🧑‍💼 幕僚长\n(分级 & 路由)"]
+        President["👔 总统\n(审批 & 签署)"]
+        Cabinet["📋 四部部长\n(起草 & 执行)"]
+        CoS --> Cabinet --> President
+    end
+
+    subgraph Legislative["🏛️ 立法分支 — 国会大厦"]
+        direction TB
+        House["🏠 众院委员会\n(审议 & 修正)"]
+        HouseVote["🗳️ 众议院投票"]
+        Senate["🏛️ 参院委员会\n(审议 & 修正)"]
+        SenateVote["🗳️ 参议院投票"]
+        House --> HouseVote --> Senate --> SenateVote
+    end
+
+    subgraph Judicial["⚖️ 司法分支 — 最高法院"]
+        direction TB
+        CJ["👨‍⚖️ 首席大法官"]
+        PJ["⚖️ 进步派\n大法官"]
+        OJ["⚖️ 保守派\n大法官"]
+        CJ --- PJ
+        CJ --- OJ
+    end
+
+    Result([" ✅ 最终回复 "]):::result
+
+    User -->|"L1: 快速回复"| CoS
+    User -->|"L2: 行政审批"| CoS
+    User -->|"L3: 立法审议"| CoS
+    User -->|"L4: 全面审查"| CoS
+
+    CoS -->|"L1 直达"| Result
+    President -->|"L2 签署"| Result
+    President -->|"L3/L4 提交国会"| Legislative
+    SenateVote -->|"通过"| President
+    President -->|"签署 (L3)"| Result
+    President -->|"签署 (L4)"| Judicial
+    Judicial -->|"合宪 ✓"| Result
+    Judicial -->|"违宪 ✗"| User
+
+    classDef user fill:#3b82f6,stroke:#1d4ed8,color:#fff,rx:20
+    classDef result fill:#10b981,stroke:#059669,color:#fff,rx:20
+
+    style Executive fill:#fef3c7,stroke:#f59e0b,color:#000
+    style Legislative fill:#dbeafe,stroke:#3b82f6,color:#000
+    style Judicial fill:#fce7f3,stroke:#ec4899,color:#000
+```
+
+#### 四种级别一图看懂
+
+```
+ ⚡ L1  用户 ──→ 幕僚长 ─────────────────────────────────→ 回复     (~5秒)
+ 🔵 L2  用户 ──→ 幕僚长 ──→ 部长执行 ──→ 总统签署 ────────→ 回复    (~15秒)
+ 🟣 L3  用户 ──→ 幕僚长 ──→ 起草 ──→ 众院 ──→ 参院 ──→ 总统 ──→ 回复  (~45秒)
+ 🔴 L4  用户 ──→ 幕僚长 ──→ 起草 ──→ 众院 ──→ 参院 ──→ 总统 ──→ 最高法院 ──→ 回复  (~60秒)
+```
+
 ### 为什么叫 FedAgent？
 
 **Fed** = Federal（联邦），**Agent** = AI Agent。正如美国联邦政府通过三权分立实现权力制衡，FedAgent 让多个 AI Agent 通过相互审查来确保输出质量：

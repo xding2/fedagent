@@ -106,6 +106,14 @@ const translations: Record<string, Record<Locale, string>> = {
   'agent.justice_originalist': { zh: '保守派大法官', en: 'Originalist Justice' },
   'agent.press_secretary': { zh: '新闻秘书', en: 'Press Secretary' },
 
+  // ── Pixel World ──
+  'pixel.executive': { zh: '行政', en: 'Executive' },
+  'pixel.legislative': { zh: '立法', en: 'Legislative' },
+  'pixel.judicial': { zh: '司法', en: 'Judicial' },
+  'pixel.zoom_in': { zh: '放大', en: 'Zoom in' },
+  'pixel.zoom_out': { zh: '缩小', en: 'Zoom out' },
+  'pixel.reset_view': { zh: '重置视角', en: 'Reset view' },
+
   // ── Thinking Panel ──
   'thinking.title': { zh: 'Agent 状态', en: 'Agent Status' },
   'thinking.all_idle': { zh: '所有 Agent 待命中', en: 'All agents on standby' },

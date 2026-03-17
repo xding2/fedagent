@@ -1,14 +1,16 @@
 /**
- * 建筑渲染器 — 俯视图建筑，可见内部房间、墙壁、家具
+ * Building Renderer — top-down buildings with visible rooms, walls, furniture
  */
 import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import { TILE_SIZE, WALL_EXTERIOR, WALL_INTERIOR } from './constants'
-import { BUILDINGS, BuildingDef, RoomDef } from './WorldConfig'
+import { BUILDINGS, BuildingDef, RoomDef, getBuildingLabel, getRoomName } from './WorldConfig'
 import { SpriteFactory } from './SpriteFactory'
 
 interface BuildingVisual {
   container: Container
   glowOverlay: Graphics
+  label: Text
+  roomLabels: { text: Text; zhName: string }[]
 }
 
 export class BuildingRenderer {
@@ -35,25 +37,26 @@ export class BuildingRenderer {
     const bw = bld.gridW * TILE_SIZE
     const bh = bld.gridH * TILE_SIZE
 
-    // 建筑阴影
     const shadow = new Graphics()
     shadow.rect(3, 3, bw, bh)
     shadow.fill({ color: 0x000000, alpha: 0.2 })
     c.addChild(shadow)
 
-    // 房间地板 + 家具
+    // Rooms + furniture
+    const roomLabels: { text: Text; zhName: string }[] = []
     for (const room of bld.rooms) {
-      this.drawRoom(c, room, factory)
+      const rl = this.drawRoom(c, room, factory)
+      if (rl) roomLabels.push(rl)
     }
 
-    // 外墙
+    // Exterior walls
     const walls = new Graphics()
     walls.setStrokeStyle({ width: 3, color: WALL_EXTERIOR })
     walls.rect(0, 0, bw, bh)
     walls.stroke()
     c.addChild(walls)
 
-    // 内墙
+    // Interior walls
     const innerWalls = new Graphics()
     innerWalls.setStrokeStyle({ width: 1, color: WALL_INTERIOR })
     for (const room of bld.rooms) {
@@ -66,16 +69,16 @@ export class BuildingRenderer {
     }
     c.addChild(innerWalls)
 
-    // 入口门
+    // Entrance door
     const door = new Graphics()
     const doorX = bw / 2 - TILE_SIZE / 2
     door.rect(doorX, bh - 2, TILE_SIZE, 4)
     door.fill(0xDEB887)
     c.addChild(door)
 
-    // 建筑名称 (大号+描边，任何缩放下可读)
+    // Building name label (large + outlined, readable at any zoom)
     const label = new Text({
-      text: bld.label,
+      text: getBuildingLabel(bld.id),
       style: new TextStyle({
         fontFamily: 'Inter, Microsoft YaHei, sans-serif',
         fontSize: 13,
@@ -88,28 +91,26 @@ export class BuildingRenderer {
     label.y = -18
     c.addChild(label)
 
-    // 发光叠加层
+    // Glow overlay
     const glowOverlay = new Graphics()
     glowOverlay.rect(0, 0, bw, bh)
     glowOverlay.fill({ color: 0x3B82F6, alpha: 0.15 })
     glowOverlay.visible = false
     c.addChild(glowOverlay)
 
-    return { container: c, glowOverlay }
+    return { container: c, glowOverlay, label, roomLabels }
   }
 
-  private drawRoom(parent: Container, room: RoomDef, factory: SpriteFactory) {
+  private drawRoom(parent: Container, room: RoomDef, factory: SpriteFactory): { text: Text; zhName: string } | null {
     const rx = room.x * TILE_SIZE
     const ry = room.y * TILE_SIZE
     const rw = room.w * TILE_SIZE
     const rh = room.h * TILE_SIZE
 
-    // 地板
     const floor = new Graphics()
     floor.rect(rx, ry, rw, rh)
     floor.fill(room.floorColor)
 
-    // 地板纹理线
     floor.setStrokeStyle({ width: 0.5, color: 0x000000, alpha: 0.06 })
     for (let dx = 1; dx < room.w; dx++) {
       floor.moveTo(rx + dx * TILE_SIZE, ry)
@@ -123,7 +124,6 @@ export class BuildingRenderer {
     }
     parent.addChild(floor)
 
-    // 家具
     for (const furn of room.furniture) {
       const furnObj = factory.createFurniture(furn.type)
       furnObj.x = rx + furn.x * TILE_SIZE
@@ -131,9 +131,9 @@ export class BuildingRenderer {
       parent.addChild(furnObj)
     }
 
-    // 房间名标签
+    // Room name label (locale-aware)
     const roomLabel = new Text({
-      text: room.name,
+      text: getRoomName(room.name),
       style: new TextStyle({
         fontFamily: 'Inter, Microsoft YaHei, sans-serif',
         fontSize: 7,
@@ -144,6 +144,8 @@ export class BuildingRenderer {
     roomLabel.y = ry + 1
     roomLabel.alpha = 0.6
     parent.addChild(roomLabel)
+
+    return { text: roomLabel, zhName: room.name }
   }
 
   /** 设置建筑发光 */
@@ -160,7 +162,24 @@ export class BuildingRenderer {
     }
   }
 
-  /** 动画循环 */
+  /** Update all text labels when locale changes */
+  updateLocale() {
+    for (const [buildingId, visual] of this.buildings) {
+      // Update building label
+      const bld = BUILDINGS.find(b => b.id === buildingId)
+      if (bld) {
+        visual.label.text = getBuildingLabel(bld.id)
+        const bw = bld.gridW * TILE_SIZE
+        visual.label.x = bw / 2 - visual.label.width / 2
+      }
+      // Update room labels
+      for (const rl of visual.roomLabels) {
+        rl.text.text = getRoomName(rl.zhName)
+      }
+    }
+  }
+
+  /** Animation loop */
   tick() {
     const now = Date.now()
     this.glowTimers.forEach((startTime, buildingId) => {
